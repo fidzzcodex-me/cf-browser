@@ -1,11 +1,11 @@
-# @crxzcode/browser
+# cf-browser
 
-Puppeteer wrapper with automation enhancements and challenge handling utilities.
+Browser automation utility for web testing and data extraction.
 
 ## Install
 
 ```bash
-npm install @crxzcode/browser
+npm install cf-browser
 ```
 
 Requires Chromium. Set `PUPPETEER_EXECUTABLE_PATH` or pass `executablePath`.
@@ -18,66 +18,48 @@ export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ## Usage
 
 ```js
-const { bypass } = require('@crxzcode/browser');
+const { process } = require('cf-browser');
 
-const result = await bypass('https://example.com/login', {
+const result = await process('https://example.com', {
   headless: false,
   executablePath: '/usr/bin/chromium'
 });
 
 console.log(result.completed);
-console.log(result.tokens);
+console.log(result.data);
 console.log(result.session);
 
 await result.browser.close();
 ```
 
-## API
-
-### bypass(url, options)
+## Options
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `executablePath` | string | env `PUPPETEER_EXECUTABLE_PATH` | Chromium binary |
 | `headless` | boolean | `true` | Headless mode |
-| `runtimeFixMode` | string | `addBinding` | `addBinding` \| `alwaysIsolated` \| `enableDisable` \| `0` |
-| `utilityWorldName` | string | `util` | Isolated world name |
-| `sourceUrlMask` | string | `app.js` | Source URL mask |
+| `runtimeMode` | string | `addBinding` | Runtime strategy |
+| `utilityWorld` | string | `util` | Isolated world |
+| `sourceMask` | string | `app.js` | Source mask |
 | `debug` | boolean | `false` | Debug logs |
-| `userAgent` | string | Chrome 124 | Custom UA |
+| `userAgent` | string | Chrome default | Custom UA |
 | `viewport` | object | `{ width: 1280, height: 720 }` | Viewport |
 | `timeout` | number | `60000` | Timeout ms |
-| `waitAfterNav` | number | `3000` | Post-nav wait ms |
+| `waitAfter` | number | `3000` | Post-nav wait |
 | `autoClose` | boolean | `false` | Auto close |
-| `args` | array | `[]` | Extra Chromium args |
-
-### launch(options)
-
-```js
-const { launch, newPage, deepDetect, collectTokens } = require('@crxzcode/browser');
-
-const browser = await launch({ executablePath: '/usr/bin/chromium' });
-const page = await newPage(browser);
-
-await page.goto('https://example.com');
-
-const detection = await deepDetect(page);
-const tokens = await collectTokens(page);
-
-await browser.close();
-```
+| `args` | array | `[]` | Extra args |
 
 ## CLI
 
 ```bash
-npx @crxzcode/browser https://example.com/login
+npx cf-browser https://example.com
 ```
 
 ## Docker
 
 ```bash
-docker pull ghcr.io/fidzzcodex-me/crzcode-browser:latest
-docker run --rm ghcr.io/fidzzcodex-me/crzcode-browser https://example.com/login
+docker pull ghcr.io/fidzzcodex-me/cf-browser:latest
+docker run --rm ghcr.io/fidzzcodex-me/cf-browser https://example.com
 ```
 
 ## License
