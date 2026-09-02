@@ -1,0 +1,22 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const mod = require("./index.js");
+
+export const connect              = mod.connect;
+export const bypass               = mod.bypass;
+export const _pageController      = mod._pageController;
+export const applyPatches         = mod.applyPatches;
+export const injectStealthScripts = mod.injectStealthScripts;
+export const applyEvasions        = mod.applyEvasions;
+export const attachCursor         = mod.attachCursor;
+export const injectMousePatch     = mod.injectMousePatch;
+export const interceptNetworkTokens = mod.interceptNetworkTokens;
+export const injectDOMHarvester   = mod.injectDOMHarvester;
+export const collectTokens        = mod.collectTokens;
+export const deepDetect           = mod.deepDetect;
+export const checkTurnstile       = mod.checkTurnstile;
+export const turnstileSolverLoop  = mod.turnstileSolverLoop;
+export const solveRecaptchaV2Audio = mod.solveRecaptchaV2Audio;
+export const solveAudioCaptcha    = mod.solveAudioCaptcha;
+export const createVirtualDisplay = mod.createVirtualDisplay;
+export const destroyVirtualDisplay = mod.destroyVirtualDisplay;
