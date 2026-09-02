@@ -7,7 +7,7 @@ const { applyPatches }                          = require("./patches/runtime-fix
 const { injectStealthScripts }                  = require("./stealth/fingerprint");
 const { applyAll: applyEvasions }               = require("./stealth/evasions");
 const { attachCursor, injectMousePatch }        = require("./cursor");
-const { turnstileSolverLoop }                   = require("./captcha/turnstile");
+const { checkTurnstile }                        = require("./captcha/turnstile");
 const { createVirtualDisplay, destroyVirtualDisplay } = require("./display");
 
 const EXTRA_FLAGS = [
@@ -24,17 +24,17 @@ const EXTRA_FLAGS = [
 ];
 
 async function connect({
-  args          = [],
-  headless      = false,
-  customConfig  = {},
-  proxy         = {},
-  turnstile     = false,
-  connectOption = {},
-  disableXvfb   = false,
-  plugins       = [],
-  ignoreAllFlags = false,
-  tf            = false,
-  fingerprint   = false,
+  args             = [],
+  headless         = false,
+  customConfig     = {},
+  proxy            = {},
+  turnstile        = false,
+  connectOption    = {},
+  disableXvfb      = false,
+  plugins          = [],
+  ignoreAllFlags   = false,
+  tf               = false,
+  fingerprint      = false,
   runtimeFixMode   = "addBinding",
   utilityWorldName = "util",
   sourceUrlMask    = "app.js",
@@ -51,9 +51,6 @@ async function connect({
   let display = null;
   if (process.platform === "linux" && !disableXvfb && headless === false) {
     display = createVirtualDisplay(1920, 1080, 24);
-    if (!display) {
-      console.log("[crzcode/browser] virtual display unavailable — browser may be visible or captured");
-    }
   }
 
   let chromeFlags;
@@ -95,40 +92,34 @@ async function connect({
     ...connectOption,
   });
 
-  const activeRef = { active: turnstile };
-
-  const _cleanup = async () => {
-    activeRef.active = false;
-    destroyVirtualDisplay(display);
-    try { chrome.kill(); } catch {}
-    try { kill(chrome.pid, "SIGKILL", () => {}); } catch {}
-  };
-
-  browser.on("disconnected", _cleanup);
-
-  const pageControllerConfig = {
+  const sharedConfig = {
     browser,
     proxy,
     turnstile,
     plugins,
-    activeRef,
-    userAgent,
-    viewport,
+    display,
+    pid:         chrome.pid,
+    chrome,
     tf,
     fingerprint,
-    display,
-    pid: chrome.pid,
-    chrome,
+    userAgent,
+    viewport,
   };
 
+  browser.on("disconnected", async () => {
+    destroyVirtualDisplay(display);
+    try { chrome.kill(); } catch {}
+    try { kill(chrome.pid, "SIGKILL", () => {}); } catch {}
+  });
+
   let [page] = await browser.pages();
-  page = await _pageController({ ...pageControllerConfig, killProcess: true });
+  page = await _pageController({ ...sharedConfig, page, killProcess: true });
 
   browser.on("targetcreated", async (target) => {
     if (target.type() !== "page") return;
-    let newPage = await target.page().catch(() => null);
+    const newPage = await target.page().catch(() => null);
     if (!newPage) return;
-    newPage = await _pageController({ ...pageControllerConfig, page: newPage, killProcess: false }).catch(() => newPage);
+    await _pageController({ ...sharedConfig, page: newPage, killProcess: false }).catch(() => {});
   });
 
   return { browser, page };
@@ -137,23 +128,24 @@ async function connect({
 async function _pageController({
   browser,
   page,
-  proxy       = {},
-  turnstile   = false,
-  plugins     = [],
-  activeRef   = { active: false },
-  userAgent,
-  viewport,
-  tf          = false,
-  fingerprint = false,
-  killProcess = false,
+  proxy        = {},
+  turnstile    = false,
+  plugins      = [],
   display,
   pid,
   chrome,
+  tf           = false,
+  fingerprint  = false,
+  killProcess  = false,
+  userAgent,
+  viewport,
 } = {}) {
-  page.on("close", () => { activeRef.active = false; });
+  let solveStatus = turnstile;
+
+  page.on("close", () => { solveStatus = false; });
 
   browser.on("disconnected", async () => {
-    activeRef.active = false;
+    solveStatus = false;
     if (killProcess) {
       destroyVirtualDisplay(display);
       try { if (chrome) chrome.kill(); } catch {}
@@ -161,15 +153,20 @@ async function _pageController({
     }
   });
 
+  async function turnstileSolver() {
+    while (solveStatus) {
+      await checkTurnstile({ page }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  turnstileSolver();
+
   if (fingerprint || tf) {
     await injectStealthScripts(page);
+    await applyEvasions(page, { userAgent, viewport, extraHeaders: true });
   }
 
   await injectMousePatch(page);
-
-  if (fingerprint || tf) {
-    await applyEvasions(page, { userAgent, viewport, extraHeaders: true });
-  }
 
   if (proxy?.username && proxy?.password) {
     await page.authenticate({ username: proxy.username, password: proxy.password }).catch(() => {});
@@ -180,10 +177,6 @@ async function _pageController({
   }
 
   attachCursor(page);
-
-  if (turnstile) {
-    turnstileSolverLoop(page, activeRef).catch(() => {});
-  }
 
   return page;
 }
