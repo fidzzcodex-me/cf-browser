@@ -1,28 +1,40 @@
 {
-  "name": "@crxzcode/browser",
-  "version": "2.1.0",
-  "description": "Drop-in puppeteer-real-browser replacement — rebrowser patches, ghost-cursor, Turnstile solver, stealth fingerprint, no xvfb-run needed",
+  "name": "cf-browser",
+  "version": "2.2.0",
+  "description": "Browser automation utility with enhanced compatibility for modern web applications",
   "main": "src/index.js",
+  "module": "src/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./src/index.js",
+      "import": "./src/index.mjs",
+      "types": "./typings.d.ts"
+    }
+  },
+  "typings": "typings.d.ts",
   "bin": {
-    "crzcode-browser": "src/cli.js"
+    "cf-browser": "src/cli.js",
+    "cf-server": "server.js"
+  },
+  "scripts": {
+    "server": "node server.js",
+    "start": "node src/cli.js"
   },
   "keywords": [
+    "browser",
+    "automation",
     "puppeteer",
-    "puppeteer-real-browser",
-    "stealth",
-    "anti-detection",
-    "captcha",
-    "bypass",
-    "rebrowser",
-    "cloudflare",
-    "turnstile",
-    "ghost-cursor"
+    "web",
+    "testing",
+    "chromium",
+    "headless",
+    "scraping"
   ],
-  "author": "fidzzcodex-me",
+  "author": "crzcode",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fidzzcodex-me/crzcode-browser.git"
+    "url": "git+https://github.com/crzcode/cf-browser.git"
   },
   "engines": {
     "node": ">=18"
@@ -32,7 +44,9 @@
     "chrome-launcher": "^1.1.2",
     "ghost-cursor": "^1.3.0",
     "tree-kill": "^1.2.2",
-    "virtual-display-linux": "^1.0.4",
-    "puppeteer-extra": "^3.3.6"
+    "xvfb": "^0.4.0",
+    "puppeteer-extra": "^3.3.6",
+    "express": "^4.19.2",
+    "body-parser": "^1.20.3"
   }
 }
