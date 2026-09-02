@@ -14,11 +14,14 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libnspr4 \
     libnss3 \
+    libx11-6 \
     libx11-xcb1 \
     libxcomposite1 \
     libxdamage1 \
+    libxext6 \
     libxfixes3 \
     libxrandr2 \
+    libxrender1 \
     libxshmfence1 \
     libxtst6 \
     xdg-utils \
@@ -33,8 +36,9 @@ ENV DISPLAY=:99
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --prefer-online
 
 COPY src ./src
+COPY typings.d.ts ./
 
 ENTRYPOINT ["node", "src/cli.js"]
