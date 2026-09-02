@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: fidzzcodex-me/crzcode-browser
+  IMAGE_NAME: fidzzcodex-me/cf-browser
 
 jobs:
   build:
